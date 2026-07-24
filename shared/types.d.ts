@@ -24,16 +24,21 @@ export type Role = {
 export type MovieItem = Movie & {
   PK: string;
   SK: string;
+  entityType: "Movie";
+
 };
 
 export type ActorItem = Actor & {
   PK: string;
   SK: string;
+  entityType: "Actor";
+
 };
 
 export type RoleItem = Role & {
   PK: string;
   SK: string;
+  entityType: "Role";
 };
 
 
