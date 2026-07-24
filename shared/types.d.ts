@@ -35,3 +35,38 @@ export type RoleItem = Role & {
   PK: string;
   SK: string;
 };
+
+
+
+export type AddRoleBody = {
+  movieId: number;
+  actorId: string;
+  roleName: string;
+  roleDescription: string;
+};
+
+
+export type MovieRoleQueryParams = {
+  actor?: string;
+};
+
+export type ActorQueryParams = {
+  movie?: string;
+};
+
+
+export type SignUpBody = {
+  username: string;
+  password: string;
+  email: string;
+};
+
+export type ConfirmSignUpBody = {
+  username: string;
+  code: string;
+};
+
+export type SignInBody = {
+  username: string;
+  password: string;
+};
