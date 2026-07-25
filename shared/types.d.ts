@@ -41,7 +41,7 @@ export type RoleItem = Role & {
   entityType: "Role";
 };
 
-
+export type DatabaseItem = MovieItem | ActorItem | RoleItem;
 
 export type AddRoleBody = {
   movieId: number;
