@@ -64,3 +64,22 @@ export const roles: Role[] = [
       "A billionaire who protects Gotham City under the identity of Batman.",
   },
 ];
+export const seedData = [
+  ...movies.map((movie) => ({
+    ...movie,
+    PK: `m#${movie.movieId}`,
+    SK: `m#${movie.movieId}`,
+  })),
+
+  ...actors.map((actor) => ({
+    ...actor,
+    PK: `a#${actor.actorId}`,
+    SK: `a#${actor.actorId}`,
+  })),
+
+  ...roles.map((role) => ({
+    ...role,
+    PK: `m#${role.movieId}`,
+    SK: `a#${role.actorId}`,
+  })),
+];
