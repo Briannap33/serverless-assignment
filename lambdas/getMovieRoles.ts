@@ -1,7 +1,10 @@
 import { APIGatewayProxyHandlerV2 } from "aws-lambda";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 
-import {DynamoDBDocumentClient,QueryCommand,} from "@aws-sdk/lib-dynamodb";
+import {
+  DynamoDBDocumentClient,
+  QueryCommand,
+} from "@aws-sdk/lib-dynamodb";
 
 const ddbDocClient = createDocumentClient();
 
@@ -10,6 +13,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
     console.log("[EVENT]", JSON.stringify(event));
 
     const movieID = event.pathParameters?.movieID;
+    const actorID = event.queryStringParameters?.actor;
 
     if (!movieID) {
       return {
@@ -20,19 +24,37 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
       };
     }
 
-    const commandOutput = await ddbDocClient.send(
-      new QueryCommand({
-        TableName: process.env.TABLE_NAME,
+    let commandOutput;
 
-        KeyConditionExpression:
-          "PK = :pk AND begins_with(SK, :actorPrefix)",
+    if (actorID) {
+      commandOutput = await ddbDocClient.send(
+        new QueryCommand({
+          TableName: process.env.TABLE_NAME,
 
-        ExpressionAttributeValues: {
-          ":pk": `m#${movieID}`,
-          ":actorPrefix": "a#",
-        },
-      })
-    );
+          KeyConditionExpression:
+            "PK = :pk AND SK = :sk",
+
+          ExpressionAttributeValues: {
+            ":pk": `m#${movieID}`,
+            ":sk": `a#${actorID}`,
+          },
+        })
+      );
+    } else {
+      commandOutput = await ddbDocClient.send(
+        new QueryCommand({
+          TableName: process.env.TABLE_NAME,
+
+          KeyConditionExpression:
+            "PK = :pk AND begins_with(SK, :actorPrefix)",
+
+          ExpressionAttributeValues: {
+            ":pk": `m#${movieID}`,
+            ":actorPrefix": "a#",
+          },
+        })
+      );
+    }
 
     return {
       statusCode: 200,
