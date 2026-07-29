@@ -69,6 +69,36 @@ export class ServerlessAssignmentStack extends cdk.Stack {
 
     movieCastTable.grantReadData(getMovieRolesFn);
 
+    const getActorFn =
+      new lambdanode.NodejsFunction(
+        this,
+        "GetActorFn",
+        {
+          architecture:
+            lambda.Architecture.ARM_64,
+
+          runtime:
+            lambda.Runtime.NODEJS_22_X,
+
+          entry:
+            `${__dirname}/../lambdas/getActor.ts`,
+
+          timeout:
+            cdk.Duration.seconds(10),
+
+          memorySize: 128,
+
+          environment: {
+            TABLE_NAME:
+              movieCastTable.tableName,
+
+            REGION: "eu-west-1",
+          },
+        }
+      );
+
+    movieCastTable.grantReadData(getActorFn);
+
     const api = new apig.RestApi(this, "MovieCastApi", {
       description: "Movie Cast REST API",
 
