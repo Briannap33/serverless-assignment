@@ -15,14 +15,17 @@ export class ServerlessAssignmentStack extends cdk.Stack {
 
     const movieCastTable = new dynamodb.Table(this, "MovieCastTable", {
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+
       partitionKey: {
         name: "PK",
         type: dynamodb.AttributeType.STRING,
       },
+
       sortKey: {
         name: "SK",
         type: dynamodb.AttributeType.STRING,
       },
+
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
 
@@ -58,6 +61,7 @@ export class ServerlessAssignmentStack extends cdk.Stack {
             `${__dirname}/../lambdas/getMovieRoles.ts`,
 
           timeout: cdk.Duration.seconds(10),
+
           memorySize: 128,
 
           environment: {
@@ -74,24 +78,18 @@ export class ServerlessAssignmentStack extends cdk.Stack {
         this,
         "GetActorFn",
         {
-          architecture:
-            lambda.Architecture.ARM_64,
-
-          runtime:
-            lambda.Runtime.NODEJS_22_X,
+          architecture: lambda.Architecture.ARM_64,
+          runtime: lambda.Runtime.NODEJS_22_X,
 
           entry:
             `${__dirname}/../lambdas/getActor.ts`,
 
-          timeout:
-            cdk.Duration.seconds(10),
+          timeout: cdk.Duration.seconds(10),
 
           memorySize: 128,
 
           environment: {
-            TABLE_NAME:
-              movieCastTable.tableName,
-
+            TABLE_NAME: movieCastTable.tableName,
             REGION: "eu-west-1",
           },
         }
@@ -125,6 +123,20 @@ export class ServerlessAssignmentStack extends cdk.Stack {
       "GET",
       new apig.LambdaIntegration(
         getMovieRolesFn,
+        { proxy: true }
+      )
+    );
+
+    const actorsEndpoint =
+      api.root.addResource("actors");
+
+    const specificActorEndpoint =
+      actorsEndpoint.addResource("{actorID}");
+
+    specificActorEndpoint.addMethod(
+      "GET",
+      new apig.LambdaIntegration(
+        getActorFn,
         { proxy: true }
       )
     );
