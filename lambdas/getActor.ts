@@ -10,6 +10,8 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
 
     const actorID =
       event.pathParameters?.actorID;
+    const movieID =
+      event.queryStringParameters?.movie;
 
     if (!actorID) {
       return {
@@ -42,18 +44,56 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
       };
     }
 
-    return {
-      statusCode: 200,
+   if (!movieID) {
+  return {
+    statusCode: 200,
 
-      headers: {
-        "content-type":
-          "application/json",
+    headers: {
+      "content-type":
+        "application/json",
+    },
+
+    body: JSON.stringify({
+      actor: actorOutput.Item,
+    }),
+  };
+}
+
+const roleOutput =
+  await ddbDocClient.send(
+    new GetCommand({
+      TableName:
+        process.env.TABLE_NAME,
+
+      Key: {
+        PK: `m#${movieID}`,
+        SK: `a#${actorID}`,
       },
+    })
+  );
 
-      body: JSON.stringify({
-        actor: actorOutput.Item,
-      }),
-    };
+return {
+  statusCode: 200,
+
+  headers: {
+    "content-type":
+      "application/json",
+  },
+
+  body: JSON.stringify({
+    actor: actorOutput.Item,
+
+    role: roleOutput.Item
+      ? {
+          roleName:
+            roleOutput.Item.roleName,
+
+          roleDescription:
+            roleOutput.Item.roleDescription,
+        }
+      : undefined,
+  }),
+};
   } catch (error: any) {
     return {
       statusCode: 500,
