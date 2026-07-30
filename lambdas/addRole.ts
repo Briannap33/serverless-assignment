@@ -48,10 +48,25 @@ export const handler: APIGatewayProxyHandlerV2 =
           body.roleDescription,
       };
 
+      await ddbDocClient.send(
+        new PutCommand({
+          TableName:
+            process.env.TABLE_NAME,
+
+          Item: item,
+        })
+      );
+
       return {
-        statusCode: 200,
+        statusCode: 201,
+
+        headers: {
+          "content-type":
+            "application/json",
+        },
+
         body: JSON.stringify({
-          message: "Role item prepared",
+          message: "Role added",
           role: item,
         }),
       };
