@@ -1,4 +1,8 @@
 import { APIGatewayProxyHandlerV2 } from "aws-lambda";
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import {DynamoDBDocumentClient,PutCommand,} from "@aws-sdk/lib-dynamodb";
+
+const ddbDocClient = createDocumentClient();
 
 export const handler: APIGatewayProxyHandlerV2 =
   async (event) => {
@@ -22,8 +26,7 @@ export const handler: APIGatewayProxyHandlerV2 =
         return {
           statusCode: 400,
           body: JSON.stringify({
-            message:
-              "Invalid role data",
+            message: "Invalid role data",
           }),
         };
       }
@@ -31,8 +34,7 @@ export const handler: APIGatewayProxyHandlerV2 =
       return {
         statusCode: 200,
         body: JSON.stringify({
-          message:
-            "Role data is valid",
+          message: "Role data is valid",
         }),
       };
     } catch (error: any) {
@@ -44,3 +46,12 @@ export const handler: APIGatewayProxyHandlerV2 =
       };
     }
   };
+
+function createDocumentClient() {
+  const client =
+    new DynamoDBClient({
+      region: process.env.REGION,
+    });
+
+  return DynamoDBDocumentClient.from(client);
+}
