@@ -31,10 +31,28 @@ export const handler: APIGatewayProxyHandlerV2 =
         };
       }
 
+      const item = {
+        PK: `m#${body.movieId}`,
+        SK: `a#${body.actorId}`,
+
+        movieId:
+          body.movieId,
+
+        actorId:
+          body.actorId.toString(),
+
+        roleName:
+          body.roleName,
+
+        roleDescription:
+          body.roleDescription,
+      };
+
       return {
         statusCode: 200,
         body: JSON.stringify({
-          message: "Role data is valid",
+          message: "Role item prepared",
+          role: item,
         }),
       };
     } catch (error: any) {
