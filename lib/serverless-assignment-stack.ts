@@ -143,6 +143,17 @@ movieCastTable.grantReadWriteData(addRoleFn);
     const moviesEndpoint =
       api.root.addResource("movies");
 
+    const movieRolesEndpoint =
+      moviesEndpoint.addResource("roles");
+
+    movieRolesEndpoint.addMethod(
+      "POST",
+      new apig.LambdaIntegration(
+        addRoleFn,
+        { proxy: true }
+      )
+    );
+    
     const specificMovieEndpoint =
       moviesEndpoint.addResource("{movieID}");
 
