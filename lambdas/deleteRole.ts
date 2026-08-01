@@ -4,6 +4,48 @@ import {DynamoDBDocumentClient,DeleteCommand,} from "@aws-sdk/lib-dynamodb";
 
 const ddbDocClient = createDocumentClient();
 
+export const handler: APIGatewayProxyHandlerV2 =
+  async (event) => {
+    try {
+      console.log(
+        "[EVENT]",
+        JSON.stringify(event)
+      );
+
+      const movieID =
+        event.pathParameters?.movieID;
+
+      const actorID =
+        event.pathParameters?.actorID;
+
+      if (!movieID || !actorID) {
+        return {
+          statusCode: 400,
+          body: JSON.stringify({
+            message:
+              "Missing path parameters",
+          }),
+        };
+      }
+
+      return {
+        statusCode: 200,
+
+        body: JSON.stringify({
+          message:
+            "Role deleted",
+        }),
+      };
+    } catch (error: any) {
+      return {
+        statusCode: 500,
+        body: JSON.stringify({
+          error,
+        }),
+      };
+    }
+  };
+
 function createDocumentClient() {
   const client =
     new DynamoDBClient({
