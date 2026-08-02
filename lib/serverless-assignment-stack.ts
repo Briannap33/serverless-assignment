@@ -176,6 +176,19 @@ export class ServerlessAssignmentStack extends cdk.Stack {
 const userPoolId =
   userPool.userPoolId;
 
+  const appClient =
+  userPool.addClient(
+    "AppClient",
+    {
+      authFlows: {
+        userPassword: true,
+      },
+    }
+  );
+
+const userPoolClientId =
+  appClient.userPoolClientId;
+
 
     
     const api = new apig.RestApi(this, "MovieCastApi", {
