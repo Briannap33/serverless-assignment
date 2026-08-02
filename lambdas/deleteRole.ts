@@ -43,6 +43,16 @@ export const handler: APIGatewayProxyHandlerV2 =
           })
         );
 
+      if (!result.Attributes) {
+        return {
+          statusCode: 404,
+          body: JSON.stringify({
+            message:
+              "Role not found",
+          }),
+        };
+      }
+
       return {
         statusCode: 200,
 
