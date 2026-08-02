@@ -61,7 +61,6 @@ export class ServerlessAssignmentStack extends cdk.Stack {
             `${__dirname}/../lambdas/getMovieRoles.ts`,
 
           timeout: cdk.Duration.seconds(10),
-
           memorySize: 128,
 
           environment: {
@@ -85,7 +84,6 @@ export class ServerlessAssignmentStack extends cdk.Stack {
             `${__dirname}/../lambdas/getActor.ts`,
 
           timeout: cdk.Duration.seconds(10),
-
           memorySize: 128,
 
           environment: {
@@ -101,31 +99,61 @@ export class ServerlessAssignmentStack extends cdk.Stack {
       new lambdanode.NodejsFunction(
         this,
         "AddRoleFn",
-    {
-      architecture:
-        lambda.Architecture.ARM_64,
+        {
+          architecture:
+            lambda.Architecture.ARM_64,
 
-      runtime:
-        lambda.Runtime.NODEJS_22_X,
+          runtime:
+            lambda.Runtime.NODEJS_22_X,
 
-      entry:
-        `${__dirname}/../lambdas/addRole.ts`,
+          entry:
+            `${__dirname}/../lambdas/addRole.ts`,
 
-      timeout:
-        cdk.Duration.seconds(10),
+          timeout:
+            cdk.Duration.seconds(10),
 
-      memorySize: 128,
+          memorySize: 128,
 
-      environment: {
-        TABLE_NAME:
-          movieCastTable.tableName,
+          environment: {
+            TABLE_NAME:
+              movieCastTable.tableName,
 
-        REGION: "eu-west-1",
-      },
-    }
-  );
+            REGION: "eu-west-1",
+          },
+        }
+      );
 
-movieCastTable.grantReadWriteData(addRoleFn);
+    movieCastTable.grantReadWriteData(addRoleFn);
+
+    const deleteRoleFn =
+      new lambdanode.NodejsFunction(
+        this,
+        "DeleteRoleFn",
+        {
+          architecture:
+            lambda.Architecture.ARM_64,
+
+          runtime:
+            lambda.Runtime.NODEJS_22_X,
+
+          entry:
+            `${__dirname}/../lambdas/deleteRole.ts`,
+
+          timeout:
+            cdk.Duration.seconds(10),
+
+          memorySize: 128,
+
+          environment: {
+            TABLE_NAME:
+              movieCastTable.tableName,
+
+            REGION: "eu-west-1",
+          },
+        }
+      );
+
+    movieCastTable.grantReadWriteData(deleteRoleFn);
 
     const api = new apig.RestApi(this, "MovieCastApi", {
       description: "Movie Cast REST API",
@@ -153,7 +181,7 @@ movieCastTable.grantReadWriteData(addRoleFn);
         { proxy: true }
       )
     );
-    
+
     const specificMovieEndpoint =
       moviesEndpoint.addResource("{movieID}");
 
