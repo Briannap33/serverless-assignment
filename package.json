@@ -5,17 +5,18 @@
     "serverless-assignment": "bin/serverless-assignment.js"
   },
   "scripts": {
-    "build": "tsc",
-    "watch": "tsc -w",
-    "test": "jest",
-    "cdk": "cdk"
-  },
+  "build": "tsc",
+  "watch": "tsc -w",
+  "test": "jest",
+  "cdk": "cdk",
+  "schema": "typescript-json-schema tsconfig.json \"*\" --include \"./shared/types.d.ts\" --noExtraProps --required --refs false -o ./shared/types.schema.json"
+},
   "devDependencies": {
     "@types/aws-lambda": "^8.10.162",
     "@types/jest": "^29.5.14",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/jwk-to-pem": "^2.0.3",
-    "@types/node": "22.7.9",
+    "@types/node": "^22.20.1",
     "aws-cdk": "2.176.0",
     "esbuild": "^0.28.2",
     "jest": "^29.7.0",
