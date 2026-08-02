@@ -8,6 +8,7 @@ import * as apig from "aws-cdk-lib/aws-apigateway";
 
 import { seedData } from "../seed/data";
 import { generateBatch } from "../shared/util";
+import { UserPool } from "aws-cdk-lib/aws-cognito";
 
 export class ServerlessAssignmentStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -155,6 +156,28 @@ export class ServerlessAssignmentStack extends cdk.Stack {
 
     movieCastTable.grantReadWriteData(deleteRoleFn);
 
+    const userPool =
+  new UserPool(
+    this,
+    "UserPool",
+    {
+      signInAliases: {
+        username: true,
+        email: true,
+      },
+
+      selfSignUpEnabled: true,
+
+      removalPolicy:
+        cdk.RemovalPolicy.DESTROY,
+    }
+  );
+
+const userPoolId =
+  userPool.userPoolId;
+
+
+    
     const api = new apig.RestApi(this, "MovieCastApi", {
       description: "Movie Cast REST API",
 
