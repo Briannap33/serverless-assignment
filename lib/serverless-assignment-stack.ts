@@ -196,6 +196,17 @@ export class ServerlessAssignmentStack extends cdk.Stack {
       )
     );
 
+    const specificRoleEndpoint =
+      rolesEndpoint.addResource("{actorID}");
+
+    specificRoleEndpoint.addMethod(
+      "DELETE",
+      new apig.LambdaIntegration(
+        deleteRoleFn,
+        { proxy: true }
+      )
+    );
+
     const actorsEndpoint =
       api.root.addResource("actors");
 
