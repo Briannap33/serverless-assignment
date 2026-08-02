@@ -28,6 +28,21 @@ export const handler: APIGatewayProxyHandlerV2 =
         };
       }
 
+      const result =
+        await ddbDocClient.send(
+          new DeleteCommand({
+            TableName:
+              process.env.TABLE_NAME,
+
+            Key: {
+              PK: `m#${movieID}`,
+              SK: `a#${actorID}`,
+            },
+
+            ReturnValues: "ALL_OLD",
+          })
+        );
+
       return {
         statusCode: 200,
 
