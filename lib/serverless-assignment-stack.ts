@@ -189,7 +189,31 @@ const userPoolId =
 const userPoolClientId =
   appClient.userPoolClientId;
 
+  const authApi =
+  new apig.RestApi(
+    this,
+    "AuthApi",
+    {
+      description:
+        "Authentication API",
 
+      endpointTypes: [
+        apig.EndpointType.REGIONAL,
+      ],
+
+      defaultCorsPreflightOptions: {
+        allowOrigins:
+          apig.Cors.ALL_ORIGINS,
+      },
+    }
+  );
+
+const auth =
+  authApi.root.addResource("auth");
+
+new cdk.CfnOutput(this, "AuthApiUrl", {
+  value: authApi.url,
+});
     
     const api = new apig.RestApi(this, "MovieCastApi", {
       description: "Movie Cast REST API",
