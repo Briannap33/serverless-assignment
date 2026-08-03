@@ -157,64 +157,103 @@ export class ServerlessAssignmentStack extends cdk.Stack {
     movieCastTable.grantReadWriteData(deleteRoleFn);
 
     const userPool =
-  new UserPool(
-    this,
-    "UserPool",
-    {
-      signInAliases: {
-        username: true,
-        email: true,
-      },
+      new UserPool(
+        this,
+        "UserPool",
+        {
+          signInAliases: {
+            username: true,
+            email: true,
+          },
 
-      selfSignUpEnabled: true,
+          selfSignUpEnabled: true,
 
-      removalPolicy:
-        cdk.RemovalPolicy.DESTROY,
-    }
-  );
+          removalPolicy:
+            cdk.RemovalPolicy.DESTROY,
+        }
+      );
 
-const userPoolId =
-  userPool.userPoolId;
+    const userPoolId =
+      userPool.userPoolId;
 
-  const appClient =
-  userPool.addClient(
-    "AppClient",
-    {
-      authFlows: {
-        userPassword: true,
-      },
-    }
-  );
+    const appClient =
+      userPool.addClient(
+        "AppClient",
+        {
+          authFlows: {
+            userPassword: true,
+          },
+        }
+      );
 
-const userPoolClientId =
-  appClient.userPoolClientId;
+    const userPoolClientId =
+      appClient.userPoolClientId;
 
-  const authApi =
-  new apig.RestApi(
-    this,
-    "AuthApi",
-    {
-      description:
-        "Authentication API",
+    const authApi =
+      new apig.RestApi(
+        this,
+        "AuthApi",
+        {
+          description:
+            "Authentication API",
 
-      endpointTypes: [
-        apig.EndpointType.REGIONAL,
-      ],
+          endpointTypes: [
+            apig.EndpointType.REGIONAL,
+          ],
 
-      defaultCorsPreflightOptions: {
-        allowOrigins:
-          apig.Cors.ALL_ORIGINS,
-      },
-    }
-  );
+          defaultCorsPreflightOptions: {
+            allowOrigins:
+              apig.Cors.ALL_ORIGINS,
+          },
+        }
+      );
 
-const auth =
-  authApi.root.addResource("auth");
+    const auth =
+      authApi.root.addResource("auth");
 
-new cdk.CfnOutput(this, "AuthApiUrl", {
-  value: authApi.url,
-});
-    
+    new cdk.CfnOutput(this, "AuthApiUrl", {
+      value: authApi.url,
+    });
+
+    const addAuthRoute = (
+      resourceName: string,
+      method: string,
+      fnName: string,
+      fnEntry: string
+    ): void => {
+      const commonFnProps = {
+        architecture: lambda.Architecture.ARM_64,
+        timeout: cdk.Duration.seconds(10),
+        memorySize: 128,
+        runtime: lambda.Runtime.NODEJS_22_X,
+        handler: "handler",
+
+        environment: {
+          USER_POOL_ID: userPoolId,
+          CLIENT_ID: userPoolClientId,
+          REGION: cdk.Aws.REGION,
+        },
+      };
+
+      const resource =
+        auth.addResource(resourceName);
+
+      const fn =
+        new lambdanode.NodejsFunction(
+          this,
+          fnName,
+          {
+            ...commonFnProps,
+            entry:
+              `${__dirname}/../lambdas/auth/${fnEntry}`,
+          }
+        );
+
+      resource.addMethod(
+        method,
+        new apig.LambdaIntegration(fn)
+      );
+    };
     const api = new apig.RestApi(this, "MovieCastApi", {
       description: "Movie Cast REST API",
 
