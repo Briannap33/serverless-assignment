@@ -254,6 +254,13 @@ export class ServerlessAssignmentStack extends cdk.Stack {
         new apig.LambdaIntegration(fn)
       );
     };
+
+    addAuthRoute(
+      "signup",
+      "POST",
+      "SignupFn",
+      "signup.ts"
+    );
     const api = new apig.RestApi(this, "MovieCastApi", {
       description: "Movie Cast REST API",
 
