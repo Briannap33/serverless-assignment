@@ -40,10 +40,43 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
         const signInBody =
             body as SignInBody;
 
+        const params: InitiateAuthCommandInput = {
+            ClientId:
+                process.env.CLIENT_ID!,
+
+            AuthFlow:
+                "USER_PASSWORD_AUTH",
+
+            AuthParameters: {
+                USERNAME:
+                    signInBody.username,
+
+                PASSWORD:
+                    signInBody.password,
+            },
+        };
+
+        const command =
+            new InitiateAuthCommand(params);
+
+        const {
+            AuthenticationResult,
+        } = await client.send(command);
+
+        if (!AuthenticationResult) {
+            return {
+                statusCode: 400,
+                body: JSON.stringify({
+                    message:
+                        "User signin failed",
+                }),
+            };
+        }
         return {
             statusCode: 200,
             body: JSON.stringify({
-                message: "Signin body is valid",
+                message:
+                    "Authentication successful",
             }),
         };
 
