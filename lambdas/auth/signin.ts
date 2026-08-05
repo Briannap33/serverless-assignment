@@ -1,4 +1,4 @@
-import { APIGatewayProxyHandlerV2 } from "aws-lambda";
+import { APIGatewayProxyEventV2, APIGatewayProxyStructuredResultV2, } from "aws-lambda";
 import { SignInBody } from "../../shared/types";
 import { CognitoIdentityProviderClient, InitiateAuthCommand, InitiateAuthCommandInput, } from "@aws-sdk/client-cognito-identity-provider";
 import Ajv from "ajv";
@@ -14,7 +14,8 @@ const client = new CognitoIdentityProviderClient({
     region: process.env.REGION,
 });
 
-export const handler: APIGatewayProxyHandlerV2 = async (event) => {
+export const handler = async (event: APIGatewayProxyEventV2
+): Promise<APIGatewayProxyStructuredResultV2> => {
     try {
         console.log("[EVENT]", JSON.stringify(event));
 
@@ -25,12 +26,15 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
         if (!isValidBodyParams(body)) {
             return {
                 statusCode: 500,
+
                 headers: {
                     "content-type": "application/json",
                 },
+
                 body: JSON.stringify({
                     message:
                         "Incorrect type. Must match SignInBody schema",
+
                     schema:
                         schema.definitions["SignInBody"],
                 }),
@@ -66,17 +70,34 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
         if (!AuthenticationResult) {
             return {
                 statusCode: 400,
+
                 body: JSON.stringify({
                     message:
                         "User signin failed",
                 }),
             };
         }
+
+        const token =
+            AuthenticationResult.IdToken;
+
         return {
             statusCode: 200,
+
+            headers: {
+                "Access-Control-Allow-Headers":
+                    "*",
+                "Access-Control-Allow-Origin":
+                    "*",
+                "Set-Cookie":
+                    `token=${token}; SameSite=None; Secure; HttpOnly; Path=/; Max-Age=3600;`,
+            },
+
             body: JSON.stringify({
                 message:
-                    "Authentication successful",
+                    "Auth successfull",
+
+                token: token,
             }),
         };
 
@@ -85,6 +106,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
 
         return {
             statusCode: 500,
+
             body: JSON.stringify({
                 message: err,
             }),
