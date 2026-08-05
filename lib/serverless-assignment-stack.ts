@@ -268,6 +268,13 @@ export class ServerlessAssignmentStack extends cdk.Stack {
       "ConfirmFn",
       "confirm-signup.ts"
     );
+
+    addAuthRoute(
+      "signin",
+      "POST",
+      "SigninFn",
+      "signin.ts"
+    );
     
     const api = new apig.RestApi(this, "MovieCastApi", {
       description: "Movie Cast REST API",
