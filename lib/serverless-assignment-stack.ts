@@ -276,6 +276,13 @@ export class ServerlessAssignmentStack extends cdk.Stack {
       "signin.ts"
     );
     
+    addAuthRoute(
+      "signout", 
+      "GET", 
+      "SignoutFn", 
+      "signout.ts"
+    );
+
     const api = new apig.RestApi(this, "MovieCastApi", {
       description: "Movie Cast REST API",
 
