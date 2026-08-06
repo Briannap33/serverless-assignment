@@ -25,3 +25,35 @@ export type Jwk = {
     use: string;
   }[];
 };
+
+export const parseCookies = (
+  event:
+    | APIGatewayRequestAuthorizerEvent
+    | APIGatewayProxyEvent
+) => {
+  if (!event.headers) {
+    return undefined;
+  }
+
+  const cookiesStr =
+    event.headers.Cookie ??
+    event.headers.cookie;
+
+  if (!cookiesStr) {
+    return undefined;
+  }
+
+  const cookiesArr =
+    cookiesStr.split(";");
+
+  const cookieMap: CookieMap = {};
+
+  for (const cookie of cookiesArr) {
+    const cookieSplit =
+      cookie.trim().split("=");
+
+    cookieMap[cookieSplit[0]] =
+      cookieSplit.slice(1).join("=");
+  }
+  return cookieMap;
+};
