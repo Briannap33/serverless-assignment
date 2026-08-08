@@ -275,13 +275,38 @@ export class ServerlessAssignmentStack extends cdk.Stack {
       "SigninFn",
       "signin.ts"
     );
-    
+
     addAuthRoute(
-      "signout", 
-      "GET", 
-      "SignoutFn", 
+      "signout",
+      "GET",
+      "SignoutFn",
       "signout.ts"
     );
+
+    const authorizerFn =
+      new lambdanode.NodejsFunction(
+        this,
+        "AuthorizerFn",
+        {
+          architecture:
+            lambda.Architecture.ARM_64,
+          runtime:
+            lambda.Runtime.NODEJS_22_X,
+          entry:
+            `${__dirname}/../lambdas/auth/authorizer.ts`,
+          timeout:
+            cdk.Duration.seconds(10),
+          memorySize: 128,
+          environment: {
+            USER_POOL_ID:
+              userPoolId,
+            CLIENT_ID:
+              userPoolClientId,
+            REGION:
+              cdk.Aws.REGION,
+          },
+        }
+      );
 
     const api = new apig.RestApi(this, "MovieCastApi", {
       description: "Movie Cast REST API",
