@@ -16,6 +16,7 @@ export const handler:
         if (!cookies?.token) {
             return {
                 principalId: "",
+
                 policyDocument:
                     createPolicy(
                         event,
@@ -42,15 +43,51 @@ export const handler:
                     ),
             };
         }
+        const username =
+            verifiedJwt[
+            "cognito:username"
+            ] ??
+            verifiedJwt.email ??
+            verifiedJwt.sub;
+
+        let requestPath =
+            event.path;
+
+        const query =
+            event.queryStringParameters;
+
+        if (query) {
+            const search =
+                new URLSearchParams(
+                    Object.entries(query)
+                        .filter(
+                            (
+                                entry
+                            ): entry is [
+                                string,
+                                string,
+                            ] =>
+                                entry[1] !==
+                                undefined
+                        )
+                ).toString();
+
+            if (search) {
+                requestPath +=
+                    `?${search}`;
+            }
+        }
+        console.log(
+            `${username} ${requestPath}`
+        );
 
         return {
             principalId:
                 verifiedJwt.sub,
-
             policyDocument:
                 createPolicy(
                     event,
-                    "Deny"
+                    "Allow"
                 ),
         };
     };
