@@ -396,7 +396,13 @@ export class ServerlessAssignmentStack extends cdk.Stack {
       new apig.LambdaIntegration(
         getActorFn,
         { proxy: true }
-      )
+      ),
+      {
+        authorizer:
+          requestAuthorizer,
+        authorizationType:
+          apig.AuthorizationType.CUSTOM,
+      }
     );
 
     new cdk.CfnOutput(this, "MovieCastApiUrl", {
