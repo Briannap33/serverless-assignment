@@ -307,6 +307,24 @@ export class ServerlessAssignmentStack extends cdk.Stack {
           },
         }
       );
+    const requestAuthorizer =
+      new apig.RequestAuthorizer(
+        this,
+        "RequestAuthorizer",
+        {
+          identitySources: [
+            apig.IdentitySource.header(
+              "cookie"
+            ),
+          ],
+
+          handler:
+            authorizerFn,
+
+          resultsCacheTtl:
+            cdk.Duration.minutes(0),
+        }
+      );
 
     const api = new apig.RestApi(this, "MovieCastApi", {
       description: "Movie Cast REST API",
