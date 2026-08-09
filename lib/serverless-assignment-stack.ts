@@ -361,10 +361,17 @@ export class ServerlessAssignmentStack extends cdk.Stack {
 
     rolesEndpoint.addMethod(
       "GET",
+
       new apig.LambdaIntegration(
         getMovieRolesFn,
         { proxy: true }
-      )
+      ),
+      {
+        authorizer:
+          requestAuthorizer,
+        authorizationType:
+          apig.AuthorizationType.CUSTOM,
+      }
     );
 
     const specificRoleEndpoint =
