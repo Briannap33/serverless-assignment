@@ -339,6 +339,20 @@ export class ServerlessAssignmentStack extends cdk.Stack {
       },
     });
 
+    const adminApiKey =
+      api.addApiKey(
+        "AdminApiKey"
+      );
+
+    const usagePlan =
+      api.addUsagePlan(
+        "AdminUsagePlan",
+        {
+          name:
+            "Administrator Usage Plan",
+        }
+      );
+
     const moviesEndpoint =
       api.root.addResource("movies");
 
