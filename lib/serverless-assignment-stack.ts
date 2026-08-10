@@ -406,7 +406,11 @@ export class ServerlessAssignmentStack extends cdk.Stack {
       new apig.LambdaIntegration(
         deleteRoleFn,
         { proxy: true }
-      )
+      ),
+
+      {
+        apiKeyRequired: true,
+      }
     );
 
     const actorsEndpoint =
