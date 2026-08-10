@@ -353,6 +353,13 @@ export class ServerlessAssignmentStack extends cdk.Stack {
         }
       );
 
+    usagePlan.addApiStage({
+      stage:api.deploymentStage,
+    });
+    usagePlan.addApiKey(
+      adminApiKey
+    );
+
     const moviesEndpoint =
       api.root.addResource("movies");
 
