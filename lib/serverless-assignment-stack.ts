@@ -354,7 +354,7 @@ export class ServerlessAssignmentStack extends cdk.Stack {
       );
 
     usagePlan.addApiStage({
-      stage:api.deploymentStage,
+      stage: api.deploymentStage,
     });
     usagePlan.addApiKey(
       adminApiKey
@@ -371,7 +371,10 @@ export class ServerlessAssignmentStack extends cdk.Stack {
       new apig.LambdaIntegration(
         addRoleFn,
         { proxy: true }
-      )
+      ),
+      {
+        apiKeyRequired: true,
+      }
     );
 
     const specificMovieEndpoint =
