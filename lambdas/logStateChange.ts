@@ -1,43 +1,69 @@
-import {DynamoDBStreamHandler,} from "aws-lambda";
-import {unmarshall,} from "@aws-sdk/util-dynamodb";
+import { DynamoDBStreamHandler, } from "aws-lambda";
+import { unmarshall, } from "@aws-sdk/util-dynamodb";
 
 export const handler:
-  DynamoDBStreamHandler =
-  async (event) => {
+    DynamoDBStreamHandler =
+    async (event) => {
 
-    console.log(
-      "[EVENT]",
-      JSON.stringify(event)
-    );
-    for (
-      const record
-      of event.Records
-    ) {
+        console.log(
+            "[EVENT]",
+            JSON.stringify(event)
+        );
 
-      if (
-        record.eventName ===
-          "INSERT" &&
-        record.dynamodb?.NewImage
-      ) {
-        const item =
-          unmarshall(
-            record.dynamodb
-              .NewImage as any
-          );
-
-        if (
-          item.PK?.startsWith(
-            "m#"
-          ) &&
-          item.SK?.startsWith(
-            "a#"
-          )
+        for (
+            const record
+            of event.Records
         ) {
-          console.log(
-            `POST ${item.PK} | ${item.SK} | ${item.roleName} | ${item.roleDescription}`
-          );
-        }
-      }
 
-    }
-  };
+            if (
+                record.eventName ===
+                "INSERT" &&
+                record.dynamodb?.NewImage
+            ) {
+                const item =
+                    unmarshall(
+                        record.dynamodb
+                            .NewImage as any
+                    );
+
+                if (
+                    item.PK?.startsWith(
+                        "m#"
+                    ) &&
+                    item.SK?.startsWith(
+                        "a#"
+                    )
+                ) {
+                    console.log(
+                        `POST ${item.PK} | ${item.SK} | ${item.roleName} | ${item.roleDescription}`
+                    );
+                }
+            }
+
+            if (
+                record.eventName ===
+                "REMOVE" &&
+                record.dynamodb?.OldImage
+            ) {
+                const item =
+                    unmarshall(
+                        record.dynamodb
+                            .OldImage as any
+                    );
+
+                if (
+                    item.PK?.startsWith(
+                        "m#"
+                    ) &&
+                    item.SK?.startsWith(
+                        "a#"
+                    )
+                ) {
+                    console.log(
+                        `DELETE ${item.PK} | ${item.SK} | ${item.roleName} | ${item.roleDescription}`
+                    );
+                }
+            }
+
+        }
+    };
