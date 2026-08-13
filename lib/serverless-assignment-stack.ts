@@ -5,6 +5,7 @@ import * as custom from "aws-cdk-lib/custom-resources";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as lambdanode from "aws-cdk-lib/aws-lambda-nodejs";
 import * as apig from "aws-cdk-lib/aws-apigateway";
+import * as events from "aws-cdk-lib/aws-lambda-event-sources";
 
 import { seedData } from "../seed/data";
 import { generateBatch } from "../shared/util";
@@ -133,18 +134,13 @@ export class ServerlessAssignmentStack extends cdk.Stack {
         {
           architecture:
             lambda.Architecture.ARM_64,
-
           runtime:
             lambda.Runtime.NODEJS_22_X,
-
           entry:
             `${__dirname}/../lambdas/deleteRole.ts`,
-
           timeout:
             cdk.Duration.seconds(10),
-
           memorySize: 128,
-
           environment: {
             TABLE_NAME:
               movieCastTable.tableName,
@@ -156,6 +152,22 @@ export class ServerlessAssignmentStack extends cdk.Stack {
 
     movieCastTable.grantReadWriteData(deleteRoleFn);
 
+    const logStateChangeFn =
+      new lambdanode.NodejsFunction(
+        this,
+        "LogStateChangeFn",
+        {
+          architecture:
+            lambda.Architecture.ARM_64,
+          runtime:
+            lambda.Runtime.NODEJS_22_X,
+          entry:
+            `${__dirname}/../lambdas/logStateChange.ts`,
+          timeout:
+            cdk.Duration.seconds(10),
+          memorySize: 128,
+        }
+      );
     const userPool =
       new UserPool(
         this,
