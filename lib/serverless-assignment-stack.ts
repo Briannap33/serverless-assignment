@@ -168,6 +168,19 @@ export class ServerlessAssignmentStack extends cdk.Stack {
           memorySize: 128,
         }
       );
+      
+    logStateChangeFn.addEventSource(
+      new events.DynamoEventSource(
+        movieCastTable,
+        {
+          startingPosition:
+            lambda.StartingPosition.LATEST,
+
+          batchSize: 5,
+        }
+      )
+    );
+
     const userPool =
       new UserPool(
         this,
