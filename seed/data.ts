@@ -1,5 +1,6 @@
 import { Movie, Actor, Role } from "../shared/types";
 
+// Starter movie records used when the table is seeded.
 export const movies: Movie[] = [
   {
     movieId: 1234,
@@ -17,6 +18,7 @@ export const movies: Movie[] = [
   },
 ];
 
+// Starter actor records used when the table is seeded.
 export const actors: Actor[] = [
   {
     actorId: 4321,
@@ -41,6 +43,7 @@ export const actors: Actor[] = [
   },
 ];
 
+// Starter movie/actor role relationships.
 export const roles: Role[] = [
   {
     movieId: 1234,
@@ -64,6 +67,8 @@ export const roles: Role[] = [
       "A billionaire who protects Gotham City under the identity of Batman.",
   },
 ];
+
+// Add the PK and SK values needed for the single-table design.
 export const seedData = [
   ...movies.map((movie) => ({
     ...movie,

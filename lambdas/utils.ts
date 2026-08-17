@@ -1,119 +1,122 @@
-import {APIGatewayRequestAuthorizerEvent,APIGatewayAuthorizerEvent,PolicyDocument,APIGatewayProxyEvent,StatementEffect,} from "aws-lambda";
+import { APIGatewayRequestAuthorizerEvent, APIGatewayAuthorizerEvent, PolicyDocument, APIGatewayProxyEvent, StatementEffect, } from "aws-lambda";
 import axios from "axios";
 import jwt from "jsonwebtoken";
 import jwkToPem from "jwk-to-pem";
 
 export type CookieMap =
-  { [key: string]: string } |
-  undefined;
+    { [key: string]: string } |
+    undefined;
 
 export type JwtToken =
-  | {
-      sub: string;
-      email?: string;
-      "cognito:username"?: string;
+    | {
+        sub: string;
+        email?: string;
+        "cognito:username"?: string;
     }
-  | null;
+    | null;
 
 export type Jwk = {
-  keys: {
-    alg: string;
-    e: string;
-    kid: string;
-    kty: "RSA";
-    n: string;
-    use: string;
-  }[];
+    keys: {
+        alg: string;
+        e: string;
+        kid: string;
+        kty: "RSA";
+        n: string;
+        use: string;
+    }[];
 };
 
+// Split the Cookie header into values that are easier to use.
 export const parseCookies = (
-  event:
-    | APIGatewayRequestAuthorizerEvent
-    | APIGatewayProxyEvent
+    event:
+        | APIGatewayRequestAuthorizerEvent
+        | APIGatewayProxyEvent
 ) => {
-  if (!event.headers) {
-    return undefined;
-  }
+    if (!event.headers) {
+        return undefined;
+    }
 
-  const cookiesStr =
-    event.headers.Cookie ??
-    event.headers.cookie;
+    const cookiesStr =
+        event.headers.Cookie ??
+        event.headers.cookie;
 
-  if (!cookiesStr) {
-    return undefined;
-  }
+    if (!cookiesStr) {
+        return undefined;
+    }
 
-  const cookiesArr =
-    cookiesStr.split(";");
+    const cookiesArr =
+        cookiesStr.split(";");
 
-  const cookieMap: CookieMap = {};
+    const cookieMap: CookieMap = {};
 
-  for (const cookie of cookiesArr) {
-    const cookieSplit =
-      cookie.trim().split("=");
+    for (const cookie of cookiesArr) {
+        const cookieSplit =
+            cookie.trim().split("=");
 
-    cookieMap[cookieSplit[0]] =
-      cookieSplit.slice(1).join("=");
-  }
+        cookieMap[cookieSplit[0]] =
+            cookieSplit.slice(1).join("=");
+    }
 
-  return cookieMap;
+    return cookieMap;
 };
 
+// Download Cognito's public keys and use them to verify the JWT.
 export const verifyToken =
-  async (
-    token: string,
-    userPoolId: string | undefined,
-    region: string
-  ): Promise<JwtToken> => {
-    try {
-      const url =
-        `https://cognito-idp.${region}.amazonaws.com/${userPoolId}/.well-known/jwks.json`;
+    async (
+        token: string,
+        userPoolId: string | undefined,
+        region: string
+    ): Promise<JwtToken> => {
+        try {
+            const url =
+                `https://cognito-idp.${region}.amazonaws.com/${userPoolId}/.well-known/jwks.json`;
 
-      const {
-        data,
-      }: {
-        data: Jwk;
-      } = await axios.get(url);
+            const {
+                data,
+            }: {
+                data: Jwk;
+            } = await axios.get(url);
 
-      const pem =
-        jwkToPem(data.keys[0]);
+            const pem =
+                jwkToPem(data.keys[0]);
 
-      return jwt.verify(
-        token,
-        pem,
-        {
-          algorithms: ["RS256"],
+            return jwt.verify(
+                token,
+                pem,
+                {
+                    algorithms: ["RS256"],
+                }
+            ) as JwtToken;
+
+        } catch (error) {
+            console.log(error);
+
+            return null;
         }
-      ) as JwtToken;
+    };
 
-    } catch (error) {
-      console.log(error);
-
-      return null;
-    }
-  };
-
+// Build the Allow or Deny policy returned by the API authorizer.
 export const createPolicy = (
-  event:
-    APIGatewayAuthorizerEvent,
+    event:
+        APIGatewayAuthorizerEvent,
 
-  effect:
-    StatementEffect
+    effect:
+        StatementEffect
 ): PolicyDocument => {
-  return {
-    Version: "2012-10-17",
+    return {
+        Version: "2012-10-17",
 
-    Statement: [
-      {
-        Effect: effect,
+        Statement: [
+            {
+                Effect: effect,
 
-        Action:
-          "execute-api:Invoke",
+                Action:
+                    "execute-api:Invoke",
 
-        Resource: [
-          event.methodArn,
+                Resource: [
+                    event.methodArn,
+                ],
+            },
         ],
-      },
-    ],
-  };
+    };
 };

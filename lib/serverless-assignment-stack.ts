@@ -15,6 +15,7 @@ export class ServerlessAssignmentStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
+    // Creates the main DynamoDB table for movies, actors and roles.
     const movieCastTable = new dynamodb.Table(this, "MovieCastTable", {
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       partitionKey: {
@@ -31,6 +32,7 @@ export class ServerlessAssignmentStack extends cdk.Stack {
         cdk.RemovalPolicy.DESTROY,
     });
 
+    // Add the starter data when the table is first created.
     new custom.AwsCustomResource(this, "MovieCastInitData", {
       onCreate: {
         service: "DynamoDB",
@@ -51,6 +53,7 @@ export class ServerlessAssignmentStack extends cdk.Stack {
       }),
     });
 
+    // Lambda used to get roles for a movie.
     const getMovieRolesFn =
       new lambdanode.NodejsFunction(
         this,
@@ -74,6 +77,7 @@ export class ServerlessAssignmentStack extends cdk.Stack {
 
     movieCastTable.grantReadData(getMovieRolesFn);
 
+    // Lambda used to get an actor and their role details.
     const getActorFn =
       new lambdanode.NodejsFunction(
         this,
@@ -97,6 +101,7 @@ export class ServerlessAssignmentStack extends cdk.Stack {
 
     movieCastTable.grantReadData(getActorFn);
 
+    // Lambda used to add a new role.
     const addRoleFn =
       new lambdanode.NodejsFunction(
         this,
@@ -127,6 +132,7 @@ export class ServerlessAssignmentStack extends cdk.Stack {
 
     movieCastTable.grantReadWriteData(addRoleFn);
 
+    // Lambda used to delete a role.
     const deleteRoleFn =
       new lambdanode.NodejsFunction(
         this,
@@ -152,6 +158,7 @@ export class ServerlessAssignmentStack extends cdk.Stack {
 
     movieCastTable.grantReadWriteData(deleteRoleFn);
 
+    // Lambda that logs role changes from the DynamoDB stream.
     const logStateChangeFn =
       new lambdanode.NodejsFunction(
         this,
@@ -168,7 +175,8 @@ export class ServerlessAssignmentStack extends cdk.Stack {
           memorySize: 128,
         }
       );
-      
+
+    // Connect the DynamoDB stream to the logging Lambda.
     logStateChangeFn.addEventSource(
       new events.DynamoEventSource(
         movieCastTable,
@@ -181,6 +189,7 @@ export class ServerlessAssignmentStack extends cdk.Stack {
       )
     );
 
+    // Set up Cognito for user accounts and login.
     const userPool =
       new UserPool(
         this,
@@ -214,6 +223,7 @@ export class ServerlessAssignmentStack extends cdk.Stack {
     const userPoolClientId =
       appClient.userPoolClientId;
 
+    // Create the separate API used for authentication.
     const authApi =
       new apig.RestApi(
         this,
@@ -240,6 +250,7 @@ export class ServerlessAssignmentStack extends cdk.Stack {
       value: authApi.url,
     });
 
+    // Reuse the same setup for each authentication route.
     const addAuthRoute = (
       resourceName: string,
       method: string,
@@ -308,6 +319,7 @@ export class ServerlessAssignmentStack extends cdk.Stack {
       "signout.ts"
     );
 
+    // Lambda authorizer used to check logged-in users.
     const authorizerFn =
       new lambdanode.NodejsFunction(
         this,
@@ -332,6 +344,8 @@ export class ServerlessAssignmentStack extends cdk.Stack {
           },
         }
       );
+
+    // Use the cookie header when authorizing requests.
     const requestAuthorizer =
       new apig.RequestAuthorizer(
         this,
@@ -351,6 +365,7 @@ export class ServerlessAssignmentStack extends cdk.Stack {
         }
       );
 
+    // Create the main movie cast API.
     const api = new apig.RestApi(this, "MovieCastApi", {
       description: "Movie Cast REST API",
 
@@ -364,11 +379,13 @@ export class ServerlessAssignmentStack extends cdk.Stack {
       },
     });
 
+    // Create the API key used for admin requests.
     const adminApiKey =
       api.addApiKey(
         "AdminApiKey"
       );
 
+    // Attach the admin API key to the deployed API stage.
     const usagePlan =
       api.addUsagePlan(
         "AdminUsagePlan",
@@ -391,6 +408,7 @@ export class ServerlessAssignmentStack extends cdk.Stack {
     const movieRolesEndpoint =
       moviesEndpoint.addResource("roles");
 
+    // POST /movies/roles - admin only.
     movieRolesEndpoint.addMethod(
       "POST",
       new apig.LambdaIntegration(
@@ -408,6 +426,7 @@ export class ServerlessAssignmentStack extends cdk.Stack {
     const rolesEndpoint =
       specificMovieEndpoint.addResource("roles");
 
+    // GET /movies/{movieID}/roles - requires a logged-in user.
     rolesEndpoint.addMethod(
       "GET",
 
@@ -426,6 +445,7 @@ export class ServerlessAssignmentStack extends cdk.Stack {
     const specificRoleEndpoint =
       rolesEndpoint.addResource("{actorID}");
 
+    // DELETE /movies/{movieID}/roles/{actorID} - admin only.
     specificRoleEndpoint.addMethod(
       "DELETE",
       new apig.LambdaIntegration(
@@ -444,6 +464,7 @@ export class ServerlessAssignmentStack extends cdk.Stack {
     const specificActorEndpoint =
       actorsEndpoint.addResource("{actorID}");
 
+    // GET /actors/{actorID} - requires a logged-in user.
     specificActorEndpoint.addMethod(
       "GET",
       new apig.LambdaIntegration(

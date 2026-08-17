@@ -1,6 +1,6 @@
 import { APIGatewayProxyHandlerV2 } from "aws-lambda";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import {DynamoDBDocumentClient,GetCommand,} from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, GetCommand, } from "@aws-sdk/lib-dynamodb";
 
 const ddbDocClient = createDocumentClient();
 
@@ -8,6 +8,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
   try {
     console.log("[EVENT]", JSON.stringify(event));
 
+    // Get the actor ID and optional movie ID from the request.
     const actorID =
       event.pathParameters?.actorID;
     const movieID =
@@ -22,6 +23,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
       };
     }
 
+    // Look up the actor using the actor PK and SK.
     const actorOutput =
       await ddbDocClient.send(
         new GetCommand({
@@ -44,56 +46,59 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
       };
     }
 
-   if (!movieID) {
-  return {
-    statusCode: 200,
+    // If no movie was requested, just return the actor details.
+    if (!movieID) {
+      return {
+        statusCode: 200,
 
-    headers: {
-      "content-type":
-        "application/json",
-    },
+        headers: {
+          "content-type":
+            "application/json",
+        },
 
-    body: JSON.stringify({
-      actor: actorOutput.Item,
-    }),
-  };
-}
+        body: JSON.stringify({
+          actor: actorOutput.Item,
+        }),
+      };
+    }
 
-const roleOutput =
-  await ddbDocClient.send(
-    new GetCommand({
-      TableName:
-        process.env.TABLE_NAME,
+    // If a movie was supplied, look up this actor's role in that movie.
+    const roleOutput =
+      await ddbDocClient.send(
+        new GetCommand({
+          TableName:
+            process.env.TABLE_NAME,
 
-      Key: {
-        PK: `m#${movieID}`,
-        SK: `a#${actorID}`,
+          Key: {
+            PK: `m#${movieID}`,
+            SK: `a#${actorID}`,
+          },
+        })
+      );
+
+    // Return the actor and include the role when one is found.
+    return {
+      statusCode: 200,
+
+      headers: {
+        "content-type":
+          "application/json",
       },
-    })
-  );
 
-return {
-  statusCode: 200,
+      body: JSON.stringify({
+        actor: actorOutput.Item,
 
-  headers: {
-    "content-type":
-      "application/json",
-  },
+        role: roleOutput.Item
+          ? {
+            roleName:
+              roleOutput.Item.roleName,
 
-  body: JSON.stringify({
-    actor: actorOutput.Item,
-
-    role: roleOutput.Item
-      ? {
-          roleName:
-            roleOutput.Item.roleName,
-
-          roleDescription:
-            roleOutput.Item.roleDescription,
-        }
-      : undefined,
-  }),
-};
+            roleDescription:
+              roleOutput.Item.roleDescription,
+          }
+          : undefined,
+      }),
+    };
   } catch (error: any) {
     return {
       statusCode: 500,
@@ -102,6 +107,7 @@ return {
   }
 };
 
+// Create the DynamoDB document client.
 function createDocumentClient() {
   const client =
     new DynamoDBClient({

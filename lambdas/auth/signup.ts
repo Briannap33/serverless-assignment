@@ -3,7 +3,7 @@ import { SignUpBody } from "../../shared/types";
 
 import Ajv from "ajv";
 import schema from "../../shared/types.schema.json";
-import {CognitoIdentityProviderClient,SignUpCommand,SignUpCommandInput,} from "@aws-sdk/client-cognito-identity-provider";
+import { CognitoIdentityProviderClient, SignUpCommand, SignUpCommandInput, } from "@aws-sdk/client-cognito-identity-provider";
 
 const ajv = new Ajv();
 
@@ -11,21 +11,23 @@ const isValidBodyParams =
     ajv.compile(
         schema.definitions["SignUpBody"] || {}
     );
-    
+
 const client =
-  new CognitoIdentityProviderClient({
-    region: process.env.REGION,
-  });
+    new CognitoIdentityProviderClient({
+        region: process.env.REGION,
+    });
 
 export const handler: APIGatewayProxyHandlerV2 = async (event) => {
     try {
         console.log("[EVENT]", JSON.stringify(event));
 
+        // Read and validate the signup request body.
         const body =
             event.body
                 ? JSON.parse(event.body)
                 : undefined;
 
+        // Stops here if the signup body does not match the expected schema.
         if (!isValidBodyParams(body)) {
             return {
                 statusCode: 500,
@@ -47,6 +49,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
         const signUpBody =
             body as SignUpBody;
 
+        // Build the Cognito signup request.
         const params: SignUpCommandInput = {
             ClientId: process.env.CLIENT_ID!,
             Username: signUpBody.username,
@@ -62,6 +65,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
         const command =
             new SignUpCommand(params);
 
+        // Send the signup request to Cognito.
         const res =
             await client.send(command);
 

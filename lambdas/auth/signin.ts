@@ -19,10 +19,12 @@ export const handler = async (event: APIGatewayProxyEventV2
     try {
         console.log("[EVENT]", JSON.stringify(event));
 
+        // Read the username and password from the request.
         const body = event.body
             ? JSON.parse(event.body)
             : undefined;
 
+        // Check that the signin body matches the expected schema.
         if (!isValidBodyParams(body)) {
             return {
                 statusCode: 500,
@@ -44,6 +46,7 @@ export const handler = async (event: APIGatewayProxyEventV2
         const signInBody =
             body as SignInBody;
 
+        // Set up Cognito username/password authentication.
         const params: InitiateAuthCommandInput = {
             ClientId:
                 process.env.CLIENT_ID!,
@@ -63,6 +66,7 @@ export const handler = async (event: APIGatewayProxyEventV2
         const command =
             new InitiateAuthCommand(params);
 
+        // Send the signin request to Cognito.
         const {
             AuthenticationResult,
         } = await client.send(command);
@@ -78,9 +82,11 @@ export const handler = async (event: APIGatewayProxyEventV2
             };
         }
 
+        // Get the Cognito ID token returned after a successful signin.
         const token =
             AuthenticationResult.IdToken;
 
+        // Return the token in a secure HTTP-only cookie.
         return {
             statusCode: 200,
 

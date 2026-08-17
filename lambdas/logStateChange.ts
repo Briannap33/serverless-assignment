@@ -1,6 +1,7 @@
 import { DynamoDBStreamHandler, } from "aws-lambda";
 import { unmarshall, } from "@aws-sdk/util-dynamodb";
 
+// This handler runs when DynamoDB sends stream records.
 export const handler:
     DynamoDBStreamHandler =
     async (event) => {
@@ -10,11 +11,13 @@ export const handler:
             JSON.stringify(event)
         );
 
+        // Go through each database change in the stream event.
         for (
             const record
             of event.Records
         ) {
 
+            // Handle newly inserted role records.
             if (
                 record.eventName ===
                 "INSERT" &&
@@ -26,6 +29,7 @@ export const handler:
                             .NewImage as any
                     );
 
+                // Only log items that use the movie/actor role key pattern.
                 if (
                     item.PK?.startsWith(
                         "m#"
@@ -40,6 +44,7 @@ export const handler:
                 }
             }
 
+            // Handle deleted role records.
             if (
                 record.eventName ===
                 "REMOVE" &&

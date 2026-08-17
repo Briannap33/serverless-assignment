@@ -2,6 +2,8 @@ import {APIGatewayProxyResult,} from "aws-lambda";
 
 export const handler =
   async (): Promise<APIGatewayProxyResult> => {
+    
+    // Clear the token cookie to sign the user out.
     return {
       statusCode: 200,
       headers: {

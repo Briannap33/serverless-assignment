@@ -10,9 +10,11 @@ export const handler:
             JSON.stringify(event)
         );
 
+        // Read the login cookie from the incoming request.
         const cookies =
             parseCookies(event);
 
+        // Deny the request if there is no Cognito token.
         if (!cookies?.token) {
             return {
                 principalId: "",
@@ -25,6 +27,7 @@ export const handler:
             };
         }
 
+        // Verify the Cognito token before allowing access.
         const verifiedJwt =
             await verifyToken(
                 cookies.token,
@@ -32,6 +35,7 @@ export const handler:
                 process.env.REGION!
             );
 
+        // Deny the request if the token could not be verified.
         if (!verifiedJwt) {
             return {
                 principalId: "",
@@ -43,6 +47,8 @@ export const handler:
                     ),
             };
         }
+
+        // Work out which username to write to the activity log.
         const username =
             verifiedJwt[
             "cognito:username"
@@ -53,6 +59,7 @@ export const handler:
         let requestPath =
             event.path;
 
+        // Add the query string so the full request path is logged.
         const query =
             event.queryStringParameters;
 
@@ -77,10 +84,13 @@ export const handler:
                     `?${search}`;
             }
         }
+
+        // Log the authenticated user and the path they requested.
         console.log(
             `${username} ${requestPath}`
         );
 
+        // Allow API Gateway to continue with the request.
         return {
             principalId:
                 verifiedJwt.sub,

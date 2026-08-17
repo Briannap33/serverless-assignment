@@ -12,6 +12,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
   try {
     console.log("[EVENT]", JSON.stringify(event));
 
+    // Get the movie ID from the path and the optional actor ID from the query string.
     const movieID = event.pathParameters?.movieID;
     const actorID = event.queryStringParameters?.actor;
 
@@ -26,6 +27,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
 
     let commandOutput;
 
+    // If an actor ID is included, only query for that actor's role.
     if (actorID) {
       commandOutput = await ddbDocClient.send(
         new QueryCommand({
@@ -40,6 +42,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
           },
         })
       );
+      // Otherwise get every role stored for the movie.
     } else {
       commandOutput = await ddbDocClient.send(
         new QueryCommand({
@@ -55,6 +58,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
         })
       );
     }
+    // Return the roles found by DynamoDB.
 
     return {
       statusCode: 200,
@@ -77,6 +81,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
   }
 };
 
+// Create the DynamoDB document client used by this Lambda.
 function createDocumentClient() {
   const ddbClient = new DynamoDBClient({
     region: process.env.REGION,

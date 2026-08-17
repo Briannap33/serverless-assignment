@@ -18,10 +18,12 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
     try {
         console.log("[EVENT]", JSON.stringify(event));
 
+        // Read the username and confirmation code from the request.
         const body = event.body
             ? JSON.parse(event.body)
             : undefined;
 
+        // Check that the confirmation request has the expected fields.
         if (!isValidBodyParams(body)) {
             return {
                 statusCode: 500,
@@ -40,6 +42,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
         const confirmSignUpBody =
             body as ConfirmSignUpBody;
 
+        // Build the Cognito confirmation request.
         const params: ConfirmSignUpCommandInput = {
             ClientId: process.env.CLIENT_ID!,
             Username: confirmSignUpBody.username,
@@ -49,6 +52,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
         const command =
             new ConfirmSignUpCommand(params);
 
+        // Send the confirmation code to Cognito.
         await client.send(command);
 
         return {
